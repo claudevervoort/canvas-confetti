@@ -10,7 +10,7 @@
     global.URL &&
     global.URL.createObjectURL);
 
-  function noop() {}
+  function noop() { }
 
   // create a promise if it exists, otherwise, just
   // call the function directly
@@ -25,6 +25,42 @@
     func(noop, noop);
 
     return null;
+  }
+
+  const matmult = (m, v) => [
+    m[0][0] * v[0] + m[0][1] * v[1] + m[0][2] * v[2],
+    m[1][0] * v[0] + m[1][1] * v[1] + m[1][2] * v[2],
+    m[2][0] * v[0] + m[2][1] * v[1] + m[2][2] * v[2]
+  ]
+
+
+  let starsByRot;
+
+
+  function starsByRotation(size) {
+    if (!starsByRot) {
+      let spikes = 5;
+      let outerRadius = size / 2;
+      let innerRadius = outerRadius / 2;
+      let x = 0, y = 0
+      let vertices = [[x, y - outerRadius, 0]]
+      let rot = Math.PI / 2 * 3;
+      const step = Math.PI / spikes;
+      for (i = 0; i < spikes; i++) {
+        x = Math.cos(rot) * outerRadius;
+        y = Math.sin(rot) * outerRadius;
+        vertices.push([x, y, 0])
+        rot += step
+
+        x = Math.cos(rot) * innerRadius;
+        y = Math.sin(rot) * innerRadius;
+        vertices.push([x, y, 0])
+        rot += step
+      }
+      const starAtRotation = (angle) => vertices.map(v => matmult([[Math.cos(angle), 0, Math.sin(angle)], [0, 1, 0], [-Math.sin(angle), 0, Math.cos(angle)]], v));
+      starsByRot = [...Array(180).keys()].map(s => starAtRotation(Math.PI * 2 / 180 * s))
+    }
+    return starsByRot;
   }
 
   var raf = (function () {
@@ -106,7 +142,7 @@
           worker.addEventListener('message', workerDone);
           execute(options, id);
 
-          resolves[id] = workerDone.bind(null, { data: { callback: id }});
+          resolves[id] = workerDone.bind(null, { data: { callback: id } });
         });
 
         return prom;
@@ -208,7 +244,7 @@
     );
   }
 
-  function onlyPositiveInt(number){
+  function onlyPositiveInt(number) {
     return number < 0 ? 0 : Math.floor(number);
   }
 
@@ -229,13 +265,13 @@
     var val = String(str).replace(/[^0-9a-f]/gi, '');
 
     if (val.length < 6) {
-        val = val[0]+val[0]+val[1]+val[1]+val[2]+val[2];
+      val = val[0] + val[0] + val[1] + val[1] + val[2] + val[2];
     }
 
     return {
-      r: toDecimal(val.substring(0,2)),
-      g: toDecimal(val.substring(2,4)),
-      b: toDecimal(val.substring(4,6))
+      r: toDecimal(val.substring(0, 2)),
+      g: toDecimal(val.substring(2, 4)),
+      b: toDecimal(val.substring(4, 6))
     };
   }
 
@@ -283,6 +319,8 @@
     var radAngle = opts.angle * (Math.PI / 180);
     var radSpread = opts.spread * (Math.PI / 180);
 
+    let stars = opts.stars ? { ...opts.stars, rot: Math.floor(Math.random() * 180), velocity: opts.stars.velocity * (0.8 + 0.4 * Math.random()) } : null;
+
     return {
       x: opts.x,
       y: opts.y,
@@ -304,9 +342,12 @@
       wobbleY: 0,
       gravity: opts.gravity * 3,
       ovalScalar: 0.6,
-      scalar: opts.scalar
+      scalar: opts.scalar,
+      stars
     };
   }
+
+  let logged = false
 
   function updateFetti(context, fetti) {
     fetti.x += Math.cos(fetti.angle2D) * fetti.velocity + fetti.drift;
@@ -326,15 +367,37 @@
     var y1 = fetti.y + (fetti.random * fetti.tiltSin);
     var x2 = fetti.wobbleX + (fetti.random * fetti.tiltCos);
     var y2 = fetti.wobbleY + (fetti.random * fetti.tiltSin);
+    fetti.stars.rot += fetti.stars.velocity * 2;
+    fetti.stars.rot = fetti.stars.rot % 360;
 
+    if (!logged) {
+      console.log(fetti)
+      logged = true
+    }
     context.fillStyle = 'rgba(' + fetti.color.r + ', ' + fetti.color.g + ', ' + fetti.color.b + ', ' + (1 - progress) + ')';
-    context.beginPath();
+    //context.beginPath();
 
     if (fetti.shape === 'circle') {
       context.ellipse ?
         context.ellipse(fetti.x, fetti.y, Math.abs(x2 - x1) * fetti.ovalScalar, Math.abs(y2 - y1) * fetti.ovalScalar, Math.PI / 10 * fetti.wobble, 0, 2 * Math.PI) :
         ellipse(context, fetti.x, fetti.y, Math.abs(x2 - x1) * fetti.ovalScalar, Math.abs(y2 - y1) * fetti.ovalScalar, Math.PI / 10 * fetti.wobble, 0, 2 * Math.PI);
+    } else if (fetti.stars) {
+      let starVertices = starsByRotation(40)[Math.floor(fetti.stars.rot / 2)].map(v => [v[0] + fetti.x, v[1] + fetti.y]);
+      context.beginPath();
+      context.moveTo(starVertices[0][0], starVertices[0][1])
+
+      for (i = 1; i < starVertices.length; i++) {
+        context.lineTo(starVertices[i][0], starVertices[i][1])
+      }
+      //context.lineTo(cx, cy - outerRadius)
+      context.closePath();
+      context.lineWidth = 5;
+      context.strokeStyle = 'blue';
+      context.stroke();
+      context.fillStyle = 'skyblue';
+      console.log('*')
     } else {
+      console.log('[]')
       context.moveTo(Math.floor(fetti.x), Math.floor(fetti.y));
       context.lineTo(Math.floor(fetti.wobbleX), Math.floor(y1));
       context.lineTo(Math.floor(x2), Math.floor(y2));
@@ -436,7 +499,9 @@
       var shapes = prop(options, 'shapes');
       var scalar = prop(options, 'scalar');
       var origin = getOrigin(options);
-
+      var stars = options.stars;
+      console.log(options)
+      console.log("stars", stars)
       var temp = particleCount;
       var fettis = [];
 
@@ -457,7 +522,8 @@
             decay: decay,
             gravity: gravity,
             drift: drift,
-            scalar: scalar
+            scalar: scalar,
+            stars
           })
         );
       }
@@ -468,7 +534,7 @@
         return animationObj.addFettis(fettis);
       }
 
-      animationObj = animate(canvas, fettis, resizer, size , done);
+      animationObj = animate(canvas, fettis, resizer, size, done);
 
       return animationObj.promise;
     }
