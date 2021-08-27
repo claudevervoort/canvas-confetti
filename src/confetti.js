@@ -320,14 +320,17 @@
     var radSpread = opts.spread * (Math.PI / 180);
 
     let stars = opts.stars ? { ...opts.stars, rot: Math.floor(Math.random() * 180), velocity: opts.stars.velocity * (0.8 + 0.4 * Math.random()) } : null;
+    let velocity = (opts.startVelocity * 0.5) + (Math.random() * opts.startVelocity);
+    let angle2D = -radAngle + ((0.5 * radSpread) - (Math.random() * radSpread));
 
     return {
       x: opts.x,
       y: opts.y,
       wobble: Math.random() * 10,
       wobbleSpeed: Math.min(0.11, Math.random() * 0.1 + 0.05),
-      velocity: (opts.startVelocity * 0.5) + (Math.random() * opts.startVelocity),
-      angle2D: -radAngle + ((0.5 * radSpread) - (Math.random() * radSpread)),
+      velocity,
+      angle2D,
+      velocityVec: [velocity * Math.cos(angle2D), velocity * Math.sin(angle2D)],
       tiltAngle: (Math.random() * (0.75 - 0.25) + 0.25) * Math.PI,
       color: opts.color,
       shape: opts.shape,
@@ -343,20 +346,41 @@
       gravity: opts.gravity * 3,
       ovalScalar: 0.6,
       scalar: opts.scalar,
-      stars
+      stars,
+      magnet: opts.magnet
     };
   }
 
   let logged = false
 
+  const vecLength = (v) => Math.sqrt(v[0] * v[0] + v[1] * v[1]);
+
   function updateFetti(context, fetti) {
-    fetti.x += Math.cos(fetti.angle2D) * fetti.velocity + fetti.drift;
-    fetti.y += Math.sin(fetti.angle2D) * fetti.velocity + fetti.gravity;
+    if (!fetti.stars) {
+      fetti.tiltAngle += 0.1;
+      fetti.tiltSin = Math.sin(fetti.tiltAngle);
+      fetti.tiltCos = Math.cos(fetti.tiltAngle);
+    } else {
+      fetti.stars.rot += fetti.stars.velocity * 2;
+      fetti.stars.rot = fetti.stars.rot % 360;
+    }
+    if (fetti.magnet) {
+      let magnetVector = [fetti.magnet.x - fetti.x, fetti.magnet.y - fetti.y]
+      let magnetVectorLength = vecLength(magnetVector)
+      if (magnetVectorLength < 0.1) magnetVectorLength = 0.1;
+      magnetVector[0] = magnetVector[0] / magnetVectorLength
+      magnetVector[1] = magnetVector[1] / magnetVectorLength
+      if (!logged) console.log(fetti)
+      fetti.velocityVec[0] += 1 * fetti.magnet.strength * magnetVector[0] - fetti.magnet.drag * fetti.velocityVec[0]
+      fetti.velocityVec[1] += 1 * fetti.magnet.strength * magnetVector[1] + fetti.gravity - fetti.magnet.drag * fetti.velocityVec[1]
+      fetti.x += fetti.velocityVec[0]
+      fetti.y += fetti.velocityVec[1]
+    } else {
+      fetti.x += Math.cos(fetti.angle2D) * fetti.velocity + fetti.drift;
+      fetti.y += Math.sin(fetti.angle2D) * fetti.velocity + fetti.gravity;
+    }
     fetti.wobble += fetti.wobbleSpeed;
     fetti.velocity *= fetti.decay;
-    fetti.tiltAngle += 0.1;
-    fetti.tiltSin = Math.sin(fetti.tiltAngle);
-    fetti.tiltCos = Math.cos(fetti.tiltAngle);
     fetti.random = Math.random() + 2;
     fetti.wobbleX = fetti.x + ((10 * fetti.scalar) * Math.cos(fetti.wobble));
     fetti.wobbleY = fetti.y + ((10 * fetti.scalar) * Math.sin(fetti.wobble));
@@ -367,8 +391,6 @@
     var y1 = fetti.y + (fetti.random * fetti.tiltSin);
     var x2 = fetti.wobbleX + (fetti.random * fetti.tiltCos);
     var y2 = fetti.wobbleY + (fetti.random * fetti.tiltSin);
-    fetti.stars.rot += fetti.stars.velocity * 2;
-    fetti.stars.rot = fetti.stars.rot % 360;
 
     if (!logged) {
       console.log(fetti)
@@ -382,7 +404,7 @@
         context.ellipse(fetti.x, fetti.y, Math.abs(x2 - x1) * fetti.ovalScalar, Math.abs(y2 - y1) * fetti.ovalScalar, Math.PI / 10 * fetti.wobble, 0, 2 * Math.PI) :
         ellipse(context, fetti.x, fetti.y, Math.abs(x2 - x1) * fetti.ovalScalar, Math.abs(y2 - y1) * fetti.ovalScalar, Math.PI / 10 * fetti.wobble, 0, 2 * Math.PI);
     } else if (fetti.stars) {
-      let starVertices = starsByRotation(40)[Math.floor(fetti.stars.rot / 2)].map(v => [v[0] + fetti.x, v[1] + fetti.y]);
+      let starVertices = starsByRotation(40)[Math.floor(fetti.stars.rot / 2)].map(v => [v[0] * fetti.stars.scale + fetti.x, v[1] * fetti.stars.scale + fetti.y]);
       context.beginPath();
       context.moveTo(starVertices[0][0], starVertices[0][1])
 
@@ -391,13 +413,11 @@
       }
       //context.lineTo(cx, cy - outerRadius)
       context.closePath();
-      context.lineWidth = 5;
+      context.lineWidth = Math.ceil(fetti.stars.scale * 3);
       context.strokeStyle = 'blue';
       context.stroke();
       context.fillStyle = 'skyblue';
-      console.log('*')
     } else {
-      console.log('[]')
       context.moveTo(Math.floor(fetti.x), Math.floor(fetti.y));
       context.lineTo(Math.floor(fetti.wobbleX), Math.floor(y1));
       context.lineTo(Math.floor(x2), Math.floor(y2));
@@ -499,15 +519,13 @@
       var shapes = prop(options, 'shapes');
       var scalar = prop(options, 'scalar');
       var origin = getOrigin(options);
-      var stars = options.stars;
-      console.log(options)
-      console.log("stars", stars)
+      const stars = options.stars ? { scale: 1, velocity: 1, ...options.stars } : null;
+      const magnet = options.magnet ? { drag: 0.05, strength: 1, ...options.magnet } : null;
       var temp = particleCount;
       var fettis = [];
 
       var startX = canvas.width * origin.x;
       var startY = canvas.height * origin.y;
-
       while (temp--) {
         fettis.push(
           randomPhysics({
@@ -523,7 +541,8 @@
             gravity: gravity,
             drift: drift,
             scalar: scalar,
-            stars
+            stars,
+            magnet
           })
         );
       }
