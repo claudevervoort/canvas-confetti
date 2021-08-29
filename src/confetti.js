@@ -354,8 +354,10 @@
   let logged = false
 
   const vecLength = (v) => Math.sqrt(v[0] * v[0] + v[1] * v[1]);
-
+  const hslRgbaMap = {};
   const hslaToRgba = (h, s, l, a) => {
+    const key = `${h}-${s}-${l}`;
+    if (hslRgbaMap[key]) return hslRgbaMap[key]
     // Must be fractions of 1
     s /= 100.0;
     l /= 100.0;
@@ -384,7 +386,9 @@
     g = Math.round((g + m) * 255);
     b = Math.round((b + m) * 255);
 
-    return "rgba(" + r + "," + g + "," + b + ", " + a + ")";
+    const val = "rgba(" + r + "," + g + "," + b + ", " + a + ")";
+    hslRgbaMap[key] = val;
+    return val;
 
   }
 
