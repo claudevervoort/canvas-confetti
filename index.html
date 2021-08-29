@@ -669,16 +669,18 @@
       magnetstars: function magnetstars() {
         confetti({
           particleCount: 100,
-          spread: 70,
+          spread: 180,
           origin: { y: 0.6 },
           gravity: 0,
+          startVelocity: 10,
           stars: {
-            velocity: 1
+            hsl: [49, 100, 61],
+            velocity: 2
           },
           magnet: {
             x: 500,
             y: 50,
-            strength: 1
+            strength: 0.5
           }
         });
       },

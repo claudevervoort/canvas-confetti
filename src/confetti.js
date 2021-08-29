@@ -355,6 +355,39 @@
 
   const vecLength = (v) => Math.sqrt(v[0] * v[0] + v[1] * v[1]);
 
+  const hslaToRgba = (h, s, l, a) => {
+    // Must be fractions of 1
+    s /= 100.0;
+    l /= 100.0;
+
+    let c = (1 - Math.abs(2 * l - 1)) * s,
+      x = c * (1 - Math.abs((h / 60) % 2 - 1)),
+      m = l - c / 2.0,
+      r = 0,
+      g = 0,
+      b = 0;
+
+    if (0 <= h && h < 60) {
+      r = c; g = x; b = 0;
+    } else if (60 <= h && h < 120) {
+      r = x; g = c; b = 0;
+    } else if (120 <= h && h < 180) {
+      r = 0; g = c; b = x;
+    } else if (180 <= h && h < 240) {
+      r = 0; g = x; b = c;
+    } else if (240 <= h && h < 300) {
+      r = x; g = 0; b = c;
+    } else if (300 <= h && h < 360) {
+      r = c; g = 0; b = x;
+    }
+    r = Math.round((r + m) * 255);
+    g = Math.round((g + m) * 255);
+    b = Math.round((b + m) * 255);
+
+    return "rgba(" + r + "," + g + "," + b + ", " + a + ")";
+
+  }
+
   function updateFetti(context, fetti) {
     if (!fetti.stars) {
       fetti.tiltAngle += 0.1;
@@ -394,18 +427,12 @@
 
     if (!logged) {
       console.log(fetti)
-      logged = true
     }
-    context.fillStyle = 'rgba(' + fetti.color.r + ', ' + fetti.color.g + ', ' + fetti.color.b + ', ' + (1 - progress) + ')';
-    //context.beginPath();
+    context.beginPath();
 
-    if (fetti.shape === 'circle') {
-      context.ellipse ?
-        context.ellipse(fetti.x, fetti.y, Math.abs(x2 - x1) * fetti.ovalScalar, Math.abs(y2 - y1) * fetti.ovalScalar, Math.PI / 10 * fetti.wobble, 0, 2 * Math.PI) :
-        ellipse(context, fetti.x, fetti.y, Math.abs(x2 - x1) * fetti.ovalScalar, Math.abs(y2 - y1) * fetti.ovalScalar, Math.PI / 10 * fetti.wobble, 0, 2 * Math.PI);
-    } else if (fetti.stars) {
+    if (fetti.stars) {
+      context.fillStyle = hslaToRgba(fetti.stars.hsl[0], fetti.stars.hsl[1], fetti.stars.hsl[2] * (1.1 - fetti.stars.rot / 500), (1 - progress));
       let starVertices = starsByRotation(40)[Math.floor(fetti.stars.rot / 2)].map(v => [v[0] * fetti.stars.scale + fetti.x, v[1] * fetti.stars.scale + fetti.y]);
-      context.beginPath();
       context.moveTo(starVertices[0][0], starVertices[0][1])
 
       for (i = 1; i < starVertices.length; i++) {
@@ -413,19 +440,29 @@
       }
       //context.lineTo(cx, cy - outerRadius)
       context.closePath();
+      context.fill();
       context.lineWidth = Math.ceil(fetti.stars.scale * 3);
-      context.strokeStyle = 'blue';
+      context.strokeStyle = hslaToRgba(fetti.stars.hsl[0], fetti.stars.hsl[1], fetti.stars.hsl[2] * (0.9 - fetti.stars.rot / 500), (1 - progress));
       context.stroke();
-      context.fillStyle = 'skyblue';
+    } else if (fetti.shape === 'circle') {
+      context.fillStyle = 'rgba(' + fetti.color.r + ', ' + fetti.color.g + ', ' + fetti.color.b + ', ' + (1 - progress) + ')';
+      context.ellipse ?
+        context.ellipse(fetti.x, fetti.y, Math.abs(x2 - x1) * fetti.ovalScalar, Math.abs(y2 - y1) * fetti.ovalScalar, Math.PI / 10 * fetti.wobble, 0, 2 * Math.PI) :
+        ellipse(context, fetti.x, fetti.y, Math.abs(x2 - x1) * fetti.ovalScalar, Math.abs(y2 - y1) * fetti.ovalScalar, Math.PI / 10 * fetti.wobble, 0, 2 * Math.PI);
+      context.closePath();
+      context.fill();
+      console.log('333')
     } else {
+      context.fillStyle = 'rgba(' + fetti.color.r + ', ' + fetti.color.g + ', ' + fetti.color.b + ', ' + (1 - progress) + ')';
       context.moveTo(Math.floor(fetti.x), Math.floor(fetti.y));
       context.lineTo(Math.floor(fetti.wobbleX), Math.floor(y1));
       context.lineTo(Math.floor(x2), Math.floor(y2));
       context.lineTo(Math.floor(x1), Math.floor(fetti.wobbleY));
+      context.closePath();
+      context.fill();
     }
+    logged = true
 
-    context.closePath();
-    context.fill();
 
     return fetti.tick < fetti.totalTicks;
   }
