@@ -46,7 +46,7 @@
       let vertices = [[x, y - outerRadius, 0]]
       let rot = Math.PI / 2 * 3;
       const step = Math.PI / spikes;
-      for (i = 0; i < spikes; i++) {
+      for (let i = 0; i < spikes; i++) {
         x = Math.cos(rot) * outerRadius;
         y = Math.sin(rot) * outerRadius;
         vertices.push([x, y, 0])
@@ -439,7 +439,7 @@
       let starVertices = starsByRotation(40)[Math.floor(fetti.stars.rot / 2)].map(v => [v[0] * fetti.stars.scale + fetti.x, v[1] * fetti.stars.scale + fetti.y]);
       context.moveTo(starVertices[0][0], starVertices[0][1])
 
-      for (i = 1; i < starVertices.length; i++) {
+      for (let i = 1; i < starVertices.length; i++) {
         context.lineTo(starVertices[i][0], starVertices[i][1])
       }
       //context.lineTo(cx, cy - outerRadius)
