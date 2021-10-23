@@ -1,5 +1,5 @@
 (function main(global, module, isWorker, workerSize) {
-  var canUseWorker = !!(
+  let canUseWorker = !!(
     global.Worker &&
     global.Blob &&
     global.Promise &&
@@ -15,8 +15,8 @@
   // create a promise if it exists, otherwise, just
   // call the function directly
   function promise(func) {
-    var ModulePromise = module.exports.Promise;
-    var Prom = ModulePromise !== void 0 ? ModulePromise : global.Promise;
+    let ModulePromise = module.exports.Promise;
+    let Prom = ModulePromise !== void 0 ? ModulePromise : global.Promise;
 
     if (typeof Prom === 'function') {
       return new Prom(func);
@@ -63,15 +63,15 @@
     return starsByRot;
   }
 
-  var raf = (function () {
-    var TIME = Math.floor(1000 / 60);
-    var frame, cancel;
-    var frames = {};
-    var lastFrameTime = 0;
+  let raf = (function () {
+    let TIME = Math.floor(1000 / 60);
+    let frame, cancel;
+    let frames = {};
+    let lastFrameTime = 0;
 
     if (typeof requestAnimationFrame === 'function' && typeof cancelAnimationFrame === 'function') {
       frame = function (cb) {
-        var id = Math.random();
+        let id = Math.random();
 
         frames[id] = requestAnimationFrame(function onFrame(time) {
           if (lastFrameTime === time || lastFrameTime + TIME - 1 < time) {
@@ -103,17 +103,17 @@
     return { frame: frame, cancel: cancel };
   }());
 
-  var getWorker = (function () {
-    var worker;
-    var prom;
-    var resolves = {};
+  let getWorker = (function () {
+    let worker;
+    let prom;
+    let resolves = {};
 
     function decorate(worker) {
       function execute(options, callback) {
         worker.postMessage({ options: options || {}, callback: callback });
       }
       worker.init = function initWorker(canvas) {
-        var offscreen = canvas.transferControlToOffscreen();
+        let offscreen = canvas.transferControlToOffscreen();
         worker.postMessage({ canvas: offscreen }, [offscreen]);
       };
 
@@ -123,7 +123,7 @@
           return prom;
         }
 
-        var id = Math.random().toString(36).slice(2);
+        let id = Math.random().toString(36).slice(2);
 
         prom = promise(function (resolve) {
           function workerDone(msg) {
@@ -151,7 +151,7 @@
       worker.reset = function resetWorker() {
         worker.postMessage({ reset: true });
 
-        for (var id in resolves) {
+        for (let id in resolves) {
           resolves[id]();
           delete resolves[id];
         }
@@ -164,8 +164,8 @@
       }
 
       if (!isWorker && canUseWorker) {
-        var code = [
-          'var CONFETTI, SIZE = {}, module = {};',
+        let code = [
+          'let CONFETTI, SIZE = {}, module = {};',
           '(' + main.toString() + ')(this, module, true, SIZE);',
           'onmessage = function(msg) {',
           '  if (msg.data.options) {',
@@ -202,7 +202,7 @@
     };
   })();
 
-  var defaults = {
+  let defaults = {
     particleCount: 50,
     angle: 90,
     spread: 45,
@@ -262,7 +262,7 @@
   }
 
   function hexToRgb(str) {
-    var val = String(str).replace(/[^0-9a-f]/gi, '');
+    let val = String(str).replace(/[^0-9a-f]/gi, '');
 
     if (val.length < 6) {
       val = val[0] + val[0] + val[1] + val[1] + val[2] + val[2];
@@ -276,7 +276,7 @@
   }
 
   function getOrigin(options) {
-    var origin = prop(options, 'origin', Object);
+    let origin = prop(options, 'origin', Object);
     origin.x = prop(origin, 'x', Number);
     origin.y = prop(origin, 'y', Number);
 
@@ -289,13 +289,13 @@
   }
 
   function setCanvasRectSize(canvas) {
-    var rect = canvas.getBoundingClientRect();
+    let rect = canvas.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
   }
 
   function getCanvas(zIndex) {
-    var canvas = document.createElement('canvas');
+    let canvas = document.createElement('canvas');
 
     canvas.style.position = 'fixed';
     canvas.style.top = '0px';
@@ -316,8 +316,8 @@
   }
 
   function randomPhysics(opts) {
-    var radAngle = opts.angle * (Math.PI / 180);
-    var radSpread = opts.spread * (Math.PI / 180);
+    let radAngle = opts.angle * (Math.PI / 180);
+    let radSpread = opts.spread * (Math.PI / 180);
 
     let stars = opts.stars ? { ...opts.stars, rot: Math.floor(Math.random() * 180), velocity: opts.stars.velocity * (0.8 + 0.4 * Math.random()) } : null;
     let velocity = (opts.startVelocity * 0.5) + (Math.random() * opts.startVelocity);
@@ -422,12 +422,12 @@
     fetti.wobbleX = fetti.x + ((10 * fetti.scalar) * Math.cos(fetti.wobble));
     fetti.wobbleY = fetti.y + ((10 * fetti.scalar) * Math.sin(fetti.wobble));
 
-    var progress = (fetti.tick++) / fetti.totalTicks;
+    let progress = (fetti.tick++) / fetti.totalTicks;
 
-    var x1 = fetti.x + (fetti.random * fetti.tiltCos);
-    var y1 = fetti.y + (fetti.random * fetti.tiltSin);
-    var x2 = fetti.wobbleX + (fetti.random * fetti.tiltCos);
-    var y2 = fetti.wobbleY + (fetti.random * fetti.tiltSin);
+    let x1 = fetti.x + (fetti.random * fetti.tiltCos);
+    let y1 = fetti.y + (fetti.random * fetti.tiltSin);
+    let x2 = fetti.wobbleX + (fetti.random * fetti.tiltCos);
+    let y2 = fetti.wobbleY + (fetti.random * fetti.tiltSin);
 
     if (!logged) {
       console.log(fetti)
@@ -472,12 +472,12 @@
   }
 
   function animate(canvas, fettis, resizer, size, done) {
-    var animatingFettis = fettis.slice();
-    var context = canvas.getContext('2d');
-    var animationFrame;
-    var destroy;
+    let animatingFettis = fettis.slice();
+    let context = canvas.getContext('2d');
+    let animationFrame;
+    let destroy;
 
-    var prom = promise(function (resolve) {
+    let prom = promise(function (resolve) {
       function onDone() {
         animationFrame = destroy = null;
 
@@ -537,41 +537,49 @@
   }
 
   function confettiCannon(canvas, globalOpts) {
-    var isLibCanvas = !canvas;
-    var allowResize = !!prop(globalOpts || {}, 'resize');
-    var globalDisableForReducedMotion = prop(globalOpts, 'disableForReducedMotion', Boolean);
-    var shouldUseWorker = canUseWorker && !!prop(globalOpts || {}, 'useWorker');
-    var worker = shouldUseWorker ? getWorker() : null;
-    var resizer = isLibCanvas ? setCanvasWindowSize : setCanvasRectSize;
-    var initialized = (canvas && worker) ? !!canvas.__confetti_initialized : false;
-    var preferLessMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion)').matches;
-    var animationObj;
+    let isLibCanvas = !canvas;
+    let allowResize = !!prop(globalOpts || {}, 'resize');
+    let globalDisableForReducedMotion = prop(globalOpts, 'disableForReducedMotion', Boolean);
+    let shouldUseWorker = canUseWorker && !!prop(globalOpts || {}, 'useWorker');
+    let worker = shouldUseWorker ? getWorker() : null;
+    let resizer = isLibCanvas ? setCanvasWindowSize : setCanvasRectSize;
+    let initialized = (canvas && worker) ? !!canvas.__confetti_initialized : false;
+    let preferLessMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion)').matches;
+    let animationObj;
 
     function fireLocal(options, size, done) {
-      var particleCount = prop(options, 'particleCount', onlyPositiveInt);
-      var angle = prop(options, 'angle', Number);
-      var spread = prop(options, 'spread', Number);
-      var startVelocity = prop(options, 'startVelocity', Number);
-      var decay = prop(options, 'decay', Number);
-      var gravity = prop(options, 'gravity', Number);
-      var drift = prop(options, 'drift', Number);
-      var colors = prop(options, 'colors', colorsToRgb);
-      var ticks = prop(options, 'ticks', Number);
-      var shapes = prop(options, 'shapes');
-      var scalar = prop(options, 'scalar');
-      var origin = getOrigin(options);
-      const stars = options.stars ? { scale: 1, velocity: 1, ...options.stars } : null;
+      let particleCount = prop(options, 'particleCount', onlyPositiveInt);
+      let angle = prop(options, 'angle', Number);
+      let spread = prop(options, 'spread', Number);
+      let startVelocity = prop(options, 'startVelocity', Number);
+      let decay = prop(options, 'decay', Number);
+      let gravity = prop(options, 'gravity', Number);
+      let drift = prop(options, 'drift', Number);
+      let colors = prop(options, 'colors', colorsToRgb);
+      let ticks = prop(options, 'ticks', Number);
+      let shapes = prop(options, 'shapes');
+      let scalar = prop(options, 'scalar');
+      let origin = getOrigin(options);
+      const stars = options.stars ? { scale: 1, velocity: 1, hsl: [49, 100, 61], ...options.stars } : null;
       const magnet = options.magnet ? { drag: 0.05, strength: 1, ...options.magnet } : null;
-      var temp = particleCount;
-      var fettis = [];
-
-      var startX = canvas.width * origin.x;
-      var startY = canvas.height * origin.y;
+      let temp = particleCount;
+      let fettis = [];
+      let startX = 0, startY = 0, startSpreadX = 0, startSpreadY = 0;
+      if (options.originRect) {
+        const source = options.originRect;
+        startSpreadX = source.width;
+        startSpreadY = source.height;
+        startX = source.x;
+        startY = source.y;
+      } else {
+        startX = canvas.width * origin.x;
+        startY = canvas.height * origin.y;
+      }
       while (temp--) {
         fettis.push(
           randomPhysics({
-            x: startX,
-            y: startY,
+            x: startX + randomInt(0, startSpreadX),
+            y: startY + randomInt(0, startSpreadY),
             angle: angle,
             spread: spread,
             startVelocity: startVelocity,
@@ -600,8 +608,8 @@
     }
 
     function fire(options) {
-      var disableForReducedMotion = globalDisableForReducedMotion || prop(options, 'disableForReducedMotion', Boolean);
-      var zIndex = prop(options, 'zIndex', Number);
+      let disableForReducedMotion = globalDisableForReducedMotion || prop(options, 'disableForReducedMotion', Boolean);
+      let zIndex = prop(options, 'zIndex', Number);
 
       if (disableForReducedMotion && preferLessMotion) {
         return promise(function (resolve) {
@@ -623,7 +631,7 @@
         resizer(canvas);
       }
 
-      var size = {
+      let size = {
         width: canvas.width,
         height: canvas.height
       };
@@ -641,7 +649,7 @@
       function onResize() {
         if (worker) {
           // TODO this really shouldn't be immediate, because it is expensive
-          var obj = {
+          let obj = {
             getBoundingClientRect: function () {
               if (!isLibCanvas) {
                 return canvas.getBoundingClientRect();

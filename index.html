@@ -384,10 +384,10 @@
     </div>
   </div>
   <div class="container">
-    <div class="group" data-name="magnetstars">
+    <div class="group" data-name="magnetstarselt">
       <div class="flex-rows">
         <div class="left">
-          <h2><a href="#magnetstars" id="magnetstars" class="anchor">Rotating Stars</a></h2>
+          <h2><a href="#magnetstarselt" id="magnetstarselt" class="anchor">Rotating Stars</a></h2>
           <button class="run">
             Run
             <span class="icon">
@@ -398,8 +398,8 @@
           </button>
         </div>
         <div class="description">
-          <p>
-            Rotating stars... attracted by a magnet.
+          <p id="source_of_stars">
+            Rotating stars... attracted by a magnet from this element.
           </p>
         </div>
       </div>
@@ -682,6 +682,26 @@
             y: 50,
             strength: 0.5
           }
+        });
+      },
+      magnetstarselt: function magnetstarselt() {
+        const source = window.document.getElementById('source_of_stars').getBoundingClientRect();
+        confetti({
+          particleCount: 100,
+          spread: 180,
+          gravity: 0,
+          originRect: source,
+          startVelocity: 10,
+          stars: {
+            hsl: [49, 100, 61],
+            velocity: 2
+          },
+          magnet: {
+            x: 500,
+            y: 50,
+            strength: 0.5
+          },
+          source: 'source_of_stars'
         });
       },
       cannonstars: function cannonstars() {

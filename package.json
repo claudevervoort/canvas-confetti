@@ -6,6 +6,7 @@
   "module": "dist/confetti.module.mjs",
   "jsdelivr": "dist/confetti.browser.js",
   "scripts": {
+    "prepare": "npm run build",
     "build": "node build/build.js",
     "browserify": "browserify --entry src/confetti.js --outfile temp/confetti.bundle.js --standalone confetti",
     "minify": "terser --compress --mangle -o temp/confetti.min.js -- dist/confetti.browser.js",
