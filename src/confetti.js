@@ -58,7 +58,12 @@
         rot += step
       }
       const starAtRotation = (angle) => vertices.map(v => matmult([[Math.cos(angle), 0, Math.sin(angle)], [0, 1, 0], [-Math.sin(angle), 0, Math.cos(angle)]], v));
-      starsByRot = [...Array(180).keys()].map(s => starAtRotation(Math.PI * 2 / 180 * s))
+      starsByRot = [];
+      for (i = 0; i < 180; i++) {
+        starsByRot.push(starAtRotation(Math.PI * 2 / 180 * i));
+      }
+
+      //starsByRot = [...Array(180).keys()].map(s => starAtRotation(Math.PI * 2 / 180 * s))
     }
     return starsByRot;
   }
@@ -318,8 +323,12 @@
   function randomPhysics(opts) {
     let radAngle = opts.angle * (Math.PI / 180);
     let radSpread = opts.spread * (Math.PI / 180);
-
-    let stars = opts.stars ? { ...opts.stars, rot: Math.floor(Math.random() * 180), velocity: opts.stars.velocity * (0.8 + 0.4 * Math.random()) } : null;
+    const stars = opts.stars;
+    //let stars = opts.stars ? { ...opts.stars, rot: Math.floor(Math.random() * 180), velocity: opts.stars.velocity * (0.8 + 0.4 * Math.random()) } : null;
+    if (stars) {
+      stars.rot = Math.floor(Math.random() * 180);
+      stars.velocity = opts.stars.velocity * (0.8 + 0.4 * Math.random());
+    }
     let velocity = (opts.startVelocity * 0.5) + (Math.random() * opts.startVelocity);
     let angle2D = -radAngle + ((0.5 * radSpread) - (Math.random() * radSpread));
 
@@ -560,8 +569,20 @@
       let shapes = prop(options, 'shapes');
       let scalar = prop(options, 'scalar');
       let origin = getOrigin(options);
-      const stars = options.stars ? { scale: 1, velocity: 1, hsl: [49, 100, 61], ...options.stars } : null;
-      const magnet = options.magnet ? { drag: 0.05, strength: 1, ...options.magnet } : null;
+      // Spread causing trouble with worker, babelified?
+      //const stars = options.stars ? { scale: 1, velocity: 1, hsl: [49, 100, 61], ...options.stars } : null;
+      const stars = options.stars;
+      if (stars) {
+        stars.scale = stars.scale || 1;
+        stars.velocity = stars.velocity || 1;
+        stars.hsl = stars.hsl || [49, 100, 61];
+      }
+      //const magnet = options.magnet ? { drag: 0.05, strength: 1, ...options.magnet } : null;
+      const magnet = options.magnet;
+      if (magnet) {
+        magnet.drag = magnet.drag || 0.05;
+        magnet.strength = magnet.strength || 1;
+      }
       let temp = particleCount;
       let fettis = [];
       let startX = 0, startY = 0, startSpreadX = 0, startSpreadY = 0;
