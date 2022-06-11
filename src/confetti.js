@@ -59,7 +59,7 @@
       }
       const starAtRotation = (angle) => vertices.map(v => matmult([[Math.cos(angle), 0, Math.sin(angle)], [0, 1, 0], [-Math.sin(angle), 0, Math.cos(angle)]], v));
       starsByRot = [];
-      for (i = 0; i < 180; i++) {
+      for (let i = 0; i < 180; i++) {
         starsByRot.push(starAtRotation(Math.PI * 2 / 180 * i));
       }
 
